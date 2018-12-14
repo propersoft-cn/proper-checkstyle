@@ -3,6 +3,7 @@ package com.proper.checkstyle;
 import com.puppycrawl.tools.checkstyle.Checker;
 import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,12 +16,19 @@ import static org.junit.Assert.assertThat;
 
 public class SwaggerCheckerTest {
 
+    private Checker checker;
+
+    private List<File> files;
+
     @Test
-    public void test() throws Exception {
-        Checker checker = prepareCheckStyleChecker();
-        List<File> files = prepareFilesToBeChecked();
-        int numberOfErrors = checker.process(files);
-        assertThat(numberOfErrors, is(6));
+    public void test() throws CheckstyleException {
+        assertThat(checker.process(files), is(6));
+    }
+
+    @Before
+    public void setUp() throws CheckstyleException {
+        checker = prepareCheckStyleChecker();
+        files = prepareFilesToBeChecked();
     }
 
     private Checker prepareCheckStyleChecker() throws CheckstyleException {
