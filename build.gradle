@@ -3,6 +3,8 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
+apply plugin: 'jacoco'
+apply plugin: 'pmd'
 
 repositories {
     mavenCentral()
@@ -21,6 +23,13 @@ dependencies {
 
 checkstyle {
     toolVersion = '8.14'
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

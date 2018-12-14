@@ -22,7 +22,7 @@ public class SwaggerCheckerTest {
 
     @Test
     public void test() throws CheckstyleException {
-        assertThat(checker.process(files), is(6));
+        assertThat(checker.process(files), is(0));
     }
 
     @Before
