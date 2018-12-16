@@ -12,12 +12,18 @@ public class SwaggerCheck extends AbstractCheck {
 
     private String filter = Instance.FILTER;
 
+    private String mapping = Instance.REQUEST_MAPPING;
+
     public void setAnno(String anno) {
         this.anno = anno;
     }
 
     public void setFilter(String filter) {
         this.filter = filter;
+    }
+
+    public void setMapping(String mapping) {
+        this.mapping = mapping;
     }
 
     @Override
@@ -30,11 +36,16 @@ public class SwaggerCheck extends AbstractCheck {
         FileContents fileContents = getFileContents();
         String str = fileContents.getFileName();
         if (str.endsWith(filter)) {
-            if (AnnotationUtil.containsAnnotation(ast, anno)) {
-                return;
-            } else {
-                String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
-                log(ast.getLineNo(), message);
+            DetailAST detailAST = AnnotationUtil.getAnnotationHolder(ast).getFirstChild();
+            if (detailAST != null && detailAST.getFirstChild() != null && detailAST.getFirstChild().getNextSibling() != null) {
+                if (detailAST.getFirstChild().getNextSibling().getText().endsWith(mapping)) {
+                    if (AnnotationUtil.containsAnnotation(ast, anno)) {
+                        return;
+                    } else {
+                        String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
+                        log(ast.getLineNo(), message);
+                    }
+                }
             }
         }
     }
