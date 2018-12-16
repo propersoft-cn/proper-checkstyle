@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 public class PassController {
 
-    @PutMapping
     @ApiOperation("blah blah")
+    @PutMapping
     public String update(String id) {
         return "";
     }
@@ -29,8 +29,8 @@ public class PassController {
         return "";
     }
 
-    @ApiOperation("request")
     @RequestMapping
+    @ApiOperation("request")
     public String request() {
         return "";
     }

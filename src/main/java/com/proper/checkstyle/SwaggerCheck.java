@@ -1,9 +1,6 @@
 package com.proper.checkstyle;
 
-import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.FileContents;
-import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.api.*;
 import com.puppycrawl.tools.checkstyle.utils.AnnotationUtil;
 
 public class SwaggerCheck extends AbstractCheck {
@@ -36,14 +33,18 @@ public class SwaggerCheck extends AbstractCheck {
         FileContents fileContents = getFileContents();
         String str = fileContents.getFileName();
         if (str.endsWith(filter)) {
-            DetailAST detailAST = AnnotationUtil.getAnnotationHolder(ast).getFirstChild();
-            if (detailAST != null && detailAST.getFirstChild() != null && detailAST.getFirstChild().getNextSibling() != null) {
-                if (detailAST.getFirstChild().getNextSibling().getText().endsWith(mapping)) {
-                    if (AnnotationUtil.containsAnnotation(ast, anno)) {
-                        return;
-                    } else {
-                        String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
-                        log(ast.getLineNo(), message);
+            DetailAST holder = AnnotationUtil.getAnnotationHolder(ast);
+            for (DetailAST child = holder.getFirstChild(); child != null; child = child.getNextSibling()) {
+                if (child.getType() == TokenTypes.ANNOTATION) {
+                    final DetailAST detailAST = child.getFirstChild();
+                    final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
+                    if (name.endsWith(mapping)) {
+                        if (AnnotationUtil.containsAnnotation(ast, anno)) {
+                            return;
+                        } else {
+                            String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
+                            log(ast.getLineNo(), message);
+                        }
                     }
                 }
             }
