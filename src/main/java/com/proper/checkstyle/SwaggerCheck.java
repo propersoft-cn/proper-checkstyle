@@ -36,7 +36,6 @@ public class SwaggerCheck extends AbstractCheck {
             final DetailAST detailAST = child.getFirstChild();
             final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
             typeValue(name, ast);
-
         }
     }
 
