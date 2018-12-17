@@ -30,8 +30,7 @@ public class SwaggerCheck extends AbstractCheck {
 
     @Override
     public void visitToken(DetailAST ast) {
-        FileContents fileContents = getFileContents();
-        String str = fileContents.getFileName();
+        String str = getFileContents().getFileName();
         if (str.endsWith(filter)) {
             DetailAST holder = AnnotationUtil.getAnnotationHolder(ast);
             for (DetailAST child = holder.getFirstChild(); child != null; child = child.getNextSibling()) {
