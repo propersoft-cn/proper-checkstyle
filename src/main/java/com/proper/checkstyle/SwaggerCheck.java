@@ -38,14 +38,7 @@ public class SwaggerCheck extends AbstractCheck {
                 if (child.getType() == TokenTypes.ANNOTATION) {
                     final DetailAST detailAST = child.getFirstChild();
                     final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
-                    if (name.endsWith(mapping)) {
-                        if (AnnotationUtil.containsAnnotation(ast, anno)) {
-                            return;
-                        } else {
-                            String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
-                            log(ast.getLineNo(), message);
-                        }
-                    }
+                    typeValue(name, ast);
                 }
             }
         }
@@ -59,6 +52,17 @@ public class SwaggerCheck extends AbstractCheck {
     @Override
     public int[] getRequiredTokens() {
         return new int[0];
+    }
+
+    private void typeValue(String name, DetailAST ast) {
+        if (name.endsWith(mapping)) {
+            if (AnnotationUtil.containsAnnotation(ast, anno)) {
+                return;
+            } else {
+                String message = "Failed！The methods no have swagger annotation [" + ast.getText() + "]";
+                log(ast.getLineNo(), message);
+            }
+        }
     }
 
 }
