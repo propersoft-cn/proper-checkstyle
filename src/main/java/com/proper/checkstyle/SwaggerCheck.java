@@ -32,14 +32,11 @@ public class SwaggerCheck extends AbstractCheck {
     public void visitToken(DetailAST ast) {
         String str = getFileContents().getFileName();
         if (str.endsWith(filter)) {
-            DetailAST holder = AnnotationUtil.getAnnotationHolder(ast);
-            for (DetailAST child = holder.getFirstChild(); child != null; child = child.getNextSibling()) {
-                if (child.getType() == TokenTypes.ANNOTATION) {
-                    final DetailAST detailAST = child.getFirstChild();
-                    final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
-                    typeValue(name, ast);
-                }
-            }
+            DetailAST child = detail(ast);
+            final DetailAST detailAST = child.getFirstChild();
+            final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
+            typeValue(name, ast);
+
         }
     }
 
@@ -51,6 +48,16 @@ public class SwaggerCheck extends AbstractCheck {
     @Override
     public int[] getRequiredTokens() {
         return new int[0];
+    }
+
+    private DetailAST detail(DetailAST ast) {
+        DetailAST holder = AnnotationUtil.getAnnotationHolder(ast);
+        for (DetailAST child = holder.getFirstChild(); child != null; child = child.getNextSibling()) {
+            if (child.getType() == TokenTypes.ANNOTATION) {
+                return child;
+            }
+        }
+        return holder;
     }
 
     private void typeValue(String name, DetailAST ast) {
