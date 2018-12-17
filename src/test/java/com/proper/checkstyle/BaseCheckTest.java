@@ -40,7 +40,7 @@ public class BaseCheckTest {
     }
 
     private File getFile(String name) {
-        URL testFileUrl = getClass().getResource(name);
+        URL testFileUrl = BaseCheckTest.class.getResource(name);
         return new File(testFileUrl.getFile());
     }
 }
