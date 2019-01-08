@@ -1,6 +1,5 @@
 version: "2"
 checks:
-  complex-logic:
-    enabled: true
+  method-complexity:
     config:
       threshold: 10
