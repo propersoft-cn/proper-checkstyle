@@ -8,15 +8,13 @@ import com.puppycrawl.tools.checkstyle.utils.AnnotationUtil;
 
 public class SwaggerAnnotationCheck extends AbstractCheck {
 
-    public String anno = "ApiOperation";
+    private static final String ANNOTATION_SWAGGER_API = "Api";
+    private static final String ANNOTATION_SWAGGER_OPERATION = "ApiOperation";
 
-    public String restController = "RestController";
+    private static final String ANNOTATION_CONTROLLER = "Controller";
+    private static final String ANNOTATION_REST_CONTROLLER = "RestController";
 
-    public String controller = "Controller";
-
-    public String api = "Api";
-
-    public String mapping = "Mapping";
+    private static final String REQUEST_MAPPING_SUFFIX = "Mapping";
 
     @Override
     public int[] getDefaultTokens() {
@@ -25,52 +23,76 @@ public class SwaggerAnnotationCheck extends AbstractCheck {
 
     @Override
     public void visitToken(DetailAST ast) {
-        // 过滤Controller 文件并校验在类上是否有 @Api 注解
-        if (classContains(ast)) {
-            // 通过 CLASS_DEF 的树节点获取每一个 METHOD_DEF
-            DetailAST method = ast.findFirstToken(TokenTypes.OBJBLOCK).findFirstToken(TokenTypes.METHOD_DEF);
-            for (DetailAST detailAST = method; detailAST != null; detailAST = detailAST.getNextSibling()) {
-                // 校验带 @RestquestMapping 的 METHOD_DEF 是否存在 swagger 注解
-                annotation(detailAST);
-            }
-        }
-    }
-
-    private boolean classContains(DetailAST ast) {
-        if (AnnotationUtil.containsAnnotation(ast, restController) || AnnotationUtil.containsAnnotation(ast, controller)) {
-            if (AnnotationUtil.containsAnnotation(ast, api)) {
-                return true;
-            } else {
-                String message = "Failed！There must be swagger annotation '@Api' on the class!";
-                log(ast.getLineNo(), message);
-            }
-        }
-        return false;
-    }
-
-    private void annotation(DetailAST ast) {
-        if (ast.branchContains(TokenTypes.ANNOTATION) && ast.getType() == TokenTypes.METHOD_DEF) {
-            getChild(ast);
-        }
-    }
-
-    private void getChild(DetailAST ast) {
-        for (DetailAST child = AnnotationUtil.getAnnotationHolder(ast).getFirstChild(); child != null; child = child.getNextSibling()) {
-            final DetailAST detailAST = child.getFirstChild();
-            final String name = FullIdent.createFullIdent(detailAST.getNextSibling()).getText();
-            if (name.endsWith(mapping)) {
-                validApiOperation(ast);
-                break;
-            }
-        }
-    }
-
-    private void validApiOperation(DetailAST ast) {
-        if (AnnotationUtil.containsAnnotation(ast, anno)) {
+        if (!isController(ast)) {
             return;
+        }
+
+        if (hasOnClass(ast)) {
+            checkMethods(ast);
+        }
+    }
+
+    private boolean isController(DetailAST ast) {
+        return AnnotationUtil.containsAnnotation(ast, ANNOTATION_REST_CONTROLLER) || AnnotationUtil.containsAnnotation(ast, ANNOTATION_CONTROLLER);
+    }
+
+    private boolean hasOnClass(DetailAST ast) {
+        if (AnnotationUtil.containsAnnotation(ast, ANNOTATION_SWAGGER_API)) {
+            return true;
         } else {
-            String message = "There must be swagger annotation '@ApiOperation'on the method!";
+            String message = "Failed！There must be swagger annotation '@Api' on the class!";
             log(ast.getLineNo(), message);
+            return false;
+        }
+    }
+
+    /**
+     * `--OBJBLOCK -> OBJBLOCK [14:34]
+     *     |--LCURLY -> { [14:34]
+     *     |--METHOD_DEF -> METHOD_DEF [16:4]
+     *     |   |--MODIFIERS -> MODIFIERS [16:4]
+     *     |   |   |--ANNOTATION -> ANNOTATION [16:4]
+     *     |   |   |   |--AT -> @ [16:4]
+     *     |   |   |   |--IDENT -> GetMapping [16:5]
+     *     |   |   |   |--LPAREN -> ( [16:15]
+     *     |   |   |   |--EXPR -> EXPR [16:16]
+     *     |   |   |   |   `--STRING_LITERAL -> "/latest" [16:16]
+     *     |   |   |   `--RPAREN -> ) [16:25]
+     *     |   |   |--ANNOTATION -> ANNOTATION [17:4]
+     *     |   |   |   |--AT -> @ [17:4]
+     *     |   |   |   |--IDENT -> ApiOperation [17:5]
+     *     |   |   |   |--LPAREN -> ( [17:17]
+     *     |   |   |   |--EXPR -> EXPR [17:18]
+     *     |   |   |   |   `--STRING_LITERAL ->
+     * @param  ast DetailAST
+     */
+    private void checkMethods(DetailAST ast) {
+        // 通过 CLASS_DEF 的树节点获取每一个 METHOD_DEF
+        DetailAST firstMethod = ast.findFirstToken(TokenTypes.OBJBLOCK).findFirstToken(TokenTypes.METHOD_DEF);
+        for (DetailAST method = firstMethod; method != null && method.getType() == TokenTypes.METHOD_DEF; method = method.getNextSibling()) {
+            // 校验带 @RestquestMapping 的 METHOD_DEF 是否存在 swagger 注解
+            checkSingleMethod(method);
+        }
+    }
+
+    private void checkSingleMethod(DetailAST method) {
+        if (!method.branchContains(TokenTypes.ANNOTATION)) {
+            return;
+        }
+        boolean isRequestMapping = false;
+        boolean hasSwaggerAnnotation = false;
+        DetailAST firstAnnotation = AnnotationUtil.getAnnotationHolder(method).getFirstChild();
+        for (DetailAST anno = firstAnnotation; anno != null && anno.getType() == TokenTypes.ANNOTATION; anno = anno.getNextSibling()) {
+            String annotationName = FullIdent.createFullIdent(anno.getFirstChild().getNextSibling()).getText();
+            if (annotationName.endsWith(REQUEST_MAPPING_SUFFIX)) {
+                isRequestMapping = true;
+            } else if (annotationName.equals(ANNOTATION_SWAGGER_OPERATION)) {
+                hasSwaggerAnnotation = true;
+            }
+        }
+        if (isRequestMapping && !hasSwaggerAnnotation) {
+            String message = "There must be swagger annotation '@ApiOperation'on the method!";
+            log(method.getLineNo(), message);
         }
     }
 

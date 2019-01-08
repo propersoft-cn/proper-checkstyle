@@ -37,6 +37,7 @@ public class PassController {
         return "";
     }
 
+    @SuppressWarnings("unchecked")
     private void priMethod1() {
         return;
     }
