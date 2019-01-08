@@ -1,0 +1,6 @@
+version: "2"
+checks:
+  complex-logic:
+    enabled: true
+    config:
+      threshold: 10
